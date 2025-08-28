@@ -3,22 +3,14 @@ import langchain
 from langchain_community.tools import DuckDuckGoSearchRun
 from typing import Annotated
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_openai import ChatOpenAI
-import os
-import getpass
-from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_ollama import ChatOllama
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
 
-load_dotenv()
 search = DuckDuckGoSearchRun()
-
-if "OPENAI_API_KEY" not in os.environ:
-    os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOllama(model = "llama3.1")
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
@@ -36,13 +28,13 @@ def chatbot(state: State):
     
     # Handle both dict and message object formats
     if hasattr(last_message, 'content'):
-        user_question = last_message.content  # Extract the content string
+        user_question = last_message.content
     else:
-        user_question = last_message["content"]  # Extract from dict format
+        user_question = last_message["content"]
     
-    # Use the search tool with the user's question (must be a string)
+    # Use the search tool with the user's question
     search_result = search.invoke(user_question)
-    print(f"Search Result: {search_result}")
+    
     # Enhanced system prompt for better formatting
     SYSTEM_PROMPT = f"""You are an Expert Web Research Assistant with advanced information synthesis capabilities.
 
@@ -58,7 +50,6 @@ Please provide a well-structured, informative response based on the search resul
     # Create a response message with the formatted content
     response_message = AIMessage(content=formatted_response.content)
     
-    # Return the new message to be added to the state
     return {"messages": [response_message]}
 
 # Build the graph
@@ -116,7 +107,7 @@ with st.sidebar:
     **Features:**
     - Real-time web search
     - Conversational interface
-    - Powered by OpenAI
+    - Powered by Ollama
     
     **How to use:**
     1. Type your question in the chat input
